@@ -1,11 +1,13 @@
 package framework.WorldElements;
 
 import framework.Machines.Blow;
+import framework.Settings.Gravity;
 import framework.primitives.Point;
 
 public class CellarMap {
     public Cellar[][] cellars;
     public Blow blow;
+    public Gravity gravity;
 
     public CellarMap(Long x, Long y) {
         this.cellars = new Cellar[x.intValue()][y.intValue()];

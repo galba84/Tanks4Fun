@@ -2,7 +2,7 @@ package framework.Machines;
 
 import framework.primitives.Point;
 
-public class Blow {
+public class Blow extends GameObject{
     public Bullet bullet;
     public int stage;
 
