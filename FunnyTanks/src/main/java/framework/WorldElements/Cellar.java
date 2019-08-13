@@ -8,9 +8,9 @@ public class Cellar  {
     }
 
 
-    public Cellar(Long l) {
+    public Cellar(Integer l) {
 
-            type = TypeOfSoil.getValue(l.intValue());
+            type = TypeOfSoil.getValue(l);
     }
 
     public TypeOfSoil type;

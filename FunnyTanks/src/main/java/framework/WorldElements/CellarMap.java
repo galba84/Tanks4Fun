@@ -2,19 +2,19 @@ package framework.WorldElements;
 
 import framework.Machines.Blow;
 import framework.Settings.Gravity;
-import framework.primitives.Point;
+
+import java.awt.*;
 
 public class CellarMap {
-    public Cellar[][] cellars;
-    public Blow blow;
+    public volatile Cellar[][] cellars;
     public Gravity gravity;
 
-    public CellarMap(Long x, Long y) {
-        this.cellars = new Cellar[x.intValue()][y.intValue()];
+    public CellarMap(Integer x, Integer y) {
+        this.cellars = new Cellar[x][y];
     }
 
     public boolean pointHitTheGround(Point point) {
-        if (cellars[point.x.intValue()][point.y.intValue()].type == TypeOfSoil.Ground)
+        if (cellars[point.x][point.y].type.equals( TypeOfSoil.Ground))
             return true;
         return false;
     }

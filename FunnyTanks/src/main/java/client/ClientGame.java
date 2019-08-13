@@ -8,6 +8,7 @@ import com.sun.scenario.animation.SplineInterpolator;
 import framework.Calculations.CurvesCreator;
 import framework.EventBus.Action;
 import framework.EventBus.TankMoveAction;
+import framework.Machines.Blow;
 import framework.Machines.Bullet;
 import framework.Machines.GameObject;
 import framework.Machines.Tank;
@@ -42,29 +43,24 @@ import java.util.stream.Stream;
 
 public class ClientGame extends Application {
 
-    public Level level;
+    public  volatile Level level;
     private Canvas canvas;
     private GraphicsContext gc;
     private FlowPane root;
-    private User user;
-    private LevelImplementation li;
+    private volatile LevelImplementation li;
 
-    private void updateCanvas() {
+    private synchronized void updateCanvas() {
         drawCellarMap();
-        commandDrawBorderLine();
         drawTank();
         drawBullet();
     }
 
     public ClientGame() {
         li = new LevelImplementation();
-        this.user = li.createUser();
-
     }
 
-    void updateObjects() {
+    synchronized  void updateObjects() {
         this.level = li.level;
-
     }
 
     public void startPr() {
@@ -77,7 +73,7 @@ public class ClientGame extends Application {
                 runBackgClient();
             }
         };
-        li.createLevel(800L, 800L, 10, user);
+        li.createLevel(800, 800, 10);
         canvas = new Canvas(800, 800);
         gc = canvas.getGraphicsContext2D();
         root.getChildren().add(canvas);
@@ -86,7 +82,7 @@ public class ClientGame extends Application {
     }
 
 
-    void runBackgClient() {
+   synchronized void runBackgClient() {
         while (1 > 0) {
             updateObjects();
             updateCanvas();
@@ -113,22 +109,7 @@ public class ClientGame extends Application {
         li.tankShoot(level.tank1);
     }
 
-    private void getHorizon() {
-        double x1 = 11;
-        double y1 = 22;
-        double x2 = 33;
-        double y2 = 44;
-        SplineInterpolator si = new SplineInterpolator(0, 1, 0, 1);
-        try {
-            double res = si.interpolate(0, 1, 1);
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
-
-        double d;
-    }
-
-    private void drawCellarMap() {
+    private synchronized void drawCellarMap() {
         WritableImage image = new WritableImage(800, 800);
         PixelWriter pixelWriter = image.getPixelWriter();
         for (int i = 0; i < level.map.cellars.length; i++) {
@@ -142,100 +123,24 @@ public class ClientGame extends Application {
         }
 
         gc.drawImage(image, 0, 0);
-        if (level.map.blow != null) {
-            if (level.map.blow.stage == 0) {
-                gc.setFill(Color.BLACK);
-                gc.fillOval(level.map.blow.bullet.endPoint.x.intValue(), level.map.blow.bullet.endPoint.y.intValue(), 55, 55);
-            }
-            if (level.map.blow.stage == 1) {
-                gc.setFill(Color.BLACK);
-                gc.fillOval(level.map.blow.bullet.endPoint.x.intValue(), level.map.blow.bullet.endPoint.y.intValue(), 45, 45);
-            }
-            if (level.map.blow.stage == 2) {
-                gc.setFill(Color.BLACK);
-                gc.fillOval(level.map.blow.bullet.endPoint.x.intValue(), level.map.blow.bullet.endPoint.y.intValue(), 25, 25);
-            }
-            if (level.map.blow.stage == 3) {
-                gc.setFill(Color.BLACK);
-                gc.fillOval(level.map.blow.bullet.endPoint.x.intValue(), level.map.blow.bullet.endPoint.y.intValue(), 20, 20);
-            }
-            if (level.map.blow.stage == 4) {
-                gc.setFill(Color.BLACK);
-                gc.fillOval(level.map.blow.bullet.endPoint.x.intValue(), level.map.blow.bullet.endPoint.y.intValue(), 15, 15);
-            }
+        for (Blow blow :level.blows){
+            Point  p = blow.position.center;
+            gc.fillOval(p.x, p.y, 55, 55);
         }
 
-        List<Point[]> borderline = getCurvs(800);
         gc.setFill(Color.GRAY);
-        for (Point[] curve : borderline
-        ) {
-            for (int i = 0; i < curve.length; i++) {
-                try {
-                    gc.fillOval(curve[i].x, curve[i].y, 15, 15);
-                } catch (NullPointerException e) {
-                    System.out.println(e.getMessage());
-                }
+        for (int i = 0; i < level.borderLine.size(); i++) {
+            try {
+                gc.fillOval(i, level.borderLine.get(i), 15, 15);
+            } catch (NullPointerException e) {
+                System.out.println(e.getMessage());
             }
         }
-
     }
 
-    private List<Point[]> getCurvs(int maxX) {
-        CurvesCreator cc = new CurvesCreator();
-        List<Point[]> result = new LinkedList<>();
-        Point p1 = new Point(0, 200);
-        Point p2 = new Point(0, 200);
-        int x1 = 0, x2 = 0;
-
-        Random rand = new Random(System.currentTimeMillis());
-        for (int i = 0; i < maxX; i += 100) {
-            if (i > 0) {
-                p1 = new Point(p2.x, p2.y);
-                x2 = p2.x + 100;
-                int y2 = rand.nextInt(100) + 200;
-                int distanceY = getDistance(p2.y, y2);
-                if (distanceY < 10) {
-                    if (p2.y > y2) {
-                        y2 -= 10;
-                    } else {
-                        y2 += 10;
-                    }
-                }
-                p2 = new Point(x2, y2);
-            } else {
-                x1 = i;
-                int y1 = rand.nextInt(100) + 200;
-                p1 = new Point(x1, y1);
-                x2 = i + 100;
-                int y2 = rand.nextInt(100) + 200;
-                int distanceY = getDistance(y2, y1);
-                if (distanceY < 10) {
-                    if (y2 > y1) {
-                        y2 += 10;
-                    } else {
-                        y2 -= 10;
-                    }
-                }
-                p2 = new Point(x2, y2);
-            }
-            Point[] points = cc.drawCurve(p1, p2);
-            if (points[0] == null) {
-                System.out.println("shit");
-            }
-            result.add(points);
-        }
-        return result;
-    }
-
-    int getDistance(int x11, int x22) {
-        if (x11 > x22) {
-            return x11 - x22;
-        }
-        return x22 - x11;
-    }
 
     public void moveTankRight() {
-        li.moveTank(user);
+        li.moveTank();
     }
 
 
@@ -294,23 +199,6 @@ public class ClientGame extends Application {
     }
 
 
-    private void commandDrawBorderLine() {
-        List<Point> points = getBorderPoints();
-        for (int i = 1; i < points.size(); i++) {
-            drawLine(points.get(i - 1), points.get(i));
-        }
-
-        WritableImage image = new WritableImage(800, 800);
-        PixelWriter pixelWriter = image.getPixelWriter();
-        for (Long x = 1L; x < 800; x++) {
-            Long y = level.borderLine.get(x);
-            pixelWriter.setColor(x.intValue(), y.intValue(), Color.RED);
-            pixelWriter.setColor(x.intValue(), y.intValue() + 1, Color.RED);
-            pixelWriter.setColor(x.intValue(), y.intValue() + 2, Color.RED);
-        }
-    }
-
-
     class GamePanel {
 
         private FlowPane getPanel() {
@@ -343,15 +231,5 @@ public class ClientGame extends Application {
         }
     }
 
-    public static <T> Object[] concatenate(T[] a, T[] b) {
-        // Function to merge two arrays of
-        // same type
-        return Stream.of(a, b)
-                .flatMap(Stream::of)
-                .toArray();
-
-        // Arrays::stream can also be used in place
-        // of Stream::of in the flatMap() above.
-    }
 
 }
