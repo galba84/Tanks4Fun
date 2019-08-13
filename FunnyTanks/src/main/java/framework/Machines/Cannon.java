@@ -2,7 +2,7 @@ package framework.Machines;
 
 import framework.primitives.Angle;
 
-public class Cannon {
+public class Cannon extends GameObject{
 
     public Cannon(Angle angle) {
 
