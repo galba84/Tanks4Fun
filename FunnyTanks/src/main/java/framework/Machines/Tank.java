@@ -1,17 +1,17 @@
 package framework.Machines;
 
 import Server.User;
-import framework.primitives.Point;
 
+import java.awt.*;
 import java.util.Random;
 
-public class Tank extends Vehicle {
+public class Tank extends Vehicle implements Moving {
     public Integer acceleration;
     public User owner;
     public Integer maxTankSpeed;
     public TankModel tankModel;
 
-    public Tank(Point l, Point r, Cannon cannon, TankModel model, User user) {
+    public Tank(Point l, Point r, Cannon cannon, TankModel model) {
         this.left = l;
         this.right = r;
         this.cannon = cannon;
@@ -20,8 +20,7 @@ public class Tank extends Vehicle {
         id = random.nextInt(1000) + 10;
         this.tankModel = model;
         acceleration = 0;
-        this.owner = user;
-        this.ownerId = user.id;
+
     }
 
     public Point left;
@@ -32,8 +31,15 @@ public class Tank extends Vehicle {
 
     public Bullet shoot() {
         if (buttetMagazine <= 0) return null;
-        Bullet bullet = new Bullet(left, 25L, -8L);
+        Bullet bullet = new Bullet(left, 25, -8);
         return bullet;
+    }
+
+    public Point[] getTrace() {
+        return new Point[]{};
+    }
+
+    public void calculateMove() {
     }
 
     public void updateTankSpeed() {

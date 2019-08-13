@@ -1,7 +1,7 @@
 package framework.Settings;
 
 public class Gravity {
-    long gravity;
+    Integer gravity;
     public Gravity(){
         this.gravity=3;
     }

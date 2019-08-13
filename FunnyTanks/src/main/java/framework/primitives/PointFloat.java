@@ -1,13 +1,13 @@
 package framework.primitives;
 
 public class PointFloat {
-    public Long x;
+    public Integer x;
     public float fx;
     public float fy;
 
-    public Long y;
+    public Integer y;
 
-    public PointFloat(Long x, Long y) {
+    public PointFloat(Integer x, Integer y) {
         this.x = x;
         this.y = y;
     }
