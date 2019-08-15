@@ -17,15 +17,23 @@ import framework.WorldElements.Cellar;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.Spinner;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.shape.CubicCurve;
 import javafx.scene.shape.FillRule;
+import javafx.scene.shape.Line;
+import javafx.scene.text.Text;
 import javafx.scene.transform.Affine;
+import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.paint.Color;
@@ -34,6 +42,7 @@ import sun.awt.geom.Curve;
 
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,11 +52,12 @@ import java.util.stream.Stream;
 
 public class ClientGame extends Application {
 
-    public  volatile Level level;
+    public volatile Level level;
     private Canvas canvas;
     private GraphicsContext gc;
     private FlowPane root;
     private volatile LevelImplementation li;
+    WritableImage image;
 
     private synchronized void updateCanvas() {
         drawCellarMap();
@@ -55,11 +65,13 @@ public class ClientGame extends Application {
         drawBullet();
     }
 
+
     public ClientGame() {
         li = new LevelImplementation();
+        this.level = li.createLevel(800, 800, 10);
     }
 
-    synchronized  void updateObjects() {
+    synchronized void updateObjects() {
         this.level = li.level;
     }
 
@@ -73,8 +85,7 @@ public class ClientGame extends Application {
                 runBackgClient();
             }
         };
-        li.createLevel(800, 800, 10);
-        canvas = new Canvas(800, 800);
+        canvas = new Canvas(level.xDimension, level.yDimension);
         gc = canvas.getGraphicsContext2D();
         root.getChildren().add(canvas);
         Thread t = new Thread(r);
@@ -82,7 +93,7 @@ public class ClientGame extends Application {
     }
 
 
-   synchronized void runBackgClient() {
+    synchronized void runBackgClient() {
         while (1 > 0) {
             updateObjects();
             updateCanvas();
@@ -96,21 +107,21 @@ public class ClientGame extends Application {
 
     public void start(Stage primaryStage) throws Exception {
         GamePanel gamePanel = new GamePanel();
+        image = new WritableImage(level.xDimension, level.yDimension);
         root = gamePanel.getPanel();
         primaryStage.setTitle("Funny Tanks");
-        primaryStage.setHeight(800);
-        primaryStage.setWidth(800);
+        primaryStage.setHeight(level.yDimension);
+        primaryStage.setWidth(level.xDimension);
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
 
     }
 
-    private void shootFire() {
-        li.tankShoot(level.tank1);
+    private void shootFire(Integer weapon) {
+        li.tankShoot(level.tank1, weapon);
     }
 
     private synchronized void drawCellarMap() {
-        WritableImage image = new WritableImage(800, 800);
         PixelWriter pixelWriter = image.getPixelWriter();
         for (int i = 0; i < level.map.cellars.length; i++) {
             for (int j = 0; j < level.map.cellars[0].length; j++) {
@@ -121,21 +132,13 @@ public class ClientGame extends Application {
                     pixelWriter.setColor(i, j, Color.GREEN);
             }
         }
-
         gc.drawImage(image, 0, 0);
-        for (Blow blow :level.blows){
-            Point  p = blow.position.center;
+        for (Blow blow : level.blows) {
+            Point p = blow.position;
             gc.fillOval(p.x, p.y, 55, 55);
         }
 
-        gc.setFill(Color.GRAY);
-        for (int i = 0; i < level.borderLine.size(); i++) {
-            try {
-                gc.fillOval(i, level.borderLine.get(i), 15, 15);
-            } catch (NullPointerException e) {
-                System.out.println(e.getMessage());
-            }
-        }
+
     }
 
 
@@ -145,48 +148,76 @@ public class ClientGame extends Application {
 
 
     public void drawTank() {
-        level.tank1.left.y = level.borderLine.get(level.tank1.left.x);
         gc.setFill(Color.YELLOW);
         gc.fillRoundRect(level.tank1.left.x,
                 level.tank1.left.y - 25,
                 50,
                 25, 2, 3);
-        level.tank2.left.y = level.borderLine.get(level.tank2.left.x);
         gc.setFill(Color.YELLOW);
         gc.fillRoundRect(level.tank2.left.x,
                 level.tank2.left.y - 25,
                 50,
-                25, 2, 3);
+                25, 5, 6);
+
+
+        Line line = new Line();
+
+        //Setting the properties to a line
+        line.setStartX(100.0);
+        line.setStartY(150.0);
+        line.setEndX(500.0);
+        line.setEndY(150.0);
+
+
+        //Creating a Group
+        Group root = new Group(line);
+        gc.setLineWidth(10);
+        gc.strokeLine(level.tank1.cannon.mountingPoint.x, level.tank1.cannon.mountingPoint.y, level.tank1.cannon.edgePoint.x, level.tank1.cannon.edgePoint.y);
+        gc.lineTo(200, 300);
+    }
+
+    private Point2D.Double getPoint(Point point, double angle, double distance) {
+        // Angles in java are measured clockwise from 3 o'clock.
+        double theta = Math.toRadians(angle);
+        Point2D.Double p = new Point2D.Double();
+        p.x = point.x + distance * Math.cos(theta);
+        p.y = point.y + distance * Math.sin(theta);
+        return p;
+    }
+
+
+    @FXML
+    private void rotateButtonHandle(ActionEvent event) {
+        //handle for rotate
+        Spinner spinner = new Spinner(1, 10, 1);
+
+        spinner.setOnMouseClicked((MouseEvent t) -> {
+            System.out.println("X " + (t.getX()));
+            System.out.println("\nY " + (t.getY()));
+            Node shape = (Node) t.getSource();
+            shape.getTransforms().add(new Rotate(20.0, t.getX(), t.getY()));
+        });
+
     }
 
     private void drawBullet() {
-        for (Map.Entry<Integer, Bullet> entry : level.bullets.entrySet()) {
-            gc.setFill(Color.RED);
-            gc.fillOval(entry.getValue().endPoint.x, entry.getValue().endPoint.y, 10, 8);
+        for (Bullet bullet : level.bullets
+        ) {
+            gc.setFill(bullet.getColour());
+            gc.fillOval(bullet.endPoint.x, bullet.endPoint.y, bullet.getCalibre(), 8);
         }
     }
 
     List<Point> getBorderPoints() {
         Random r = new Random();
         List<Point> points = new LinkedList<Point>();
-        for (int i = 0; i < 800; i += 50) {
+        for (int i = 0; i < level.xDimension; i += 50) {
             int randomY = r.nextInt(200) - 100;
             points.add(new Point(i, randomY));
         }
         return points;
     }
 
-    private void drawLine(Point point1, Point point2) {
-        int distanceX = point1.x - point2.x;
-        int distanceY = point1.y - point2.y;
-        int iterationsNumber = (distanceX > distanceY) ? distanceX : distanceY;
-        int velocityX = 0;
-        int velocityY = 0;
-        Point midPoint = new Point(point1.x + (distanceX / 2), point1.y + distanceY / 2);
-        for (int iX = point1.x; iX < point2.x; iX++) {
-
-        }
-    }
 
     private Point[] setEdges() {
         Point[] points = new Point[800 / 50];
@@ -198,10 +229,28 @@ public class ClientGame extends Application {
         return points;
     }
 
+    void moveCannon(int angle) {
+        li.moveCannon(angle);
+    }
 
     class GamePanel {
 
         private FlowPane getPanel() {
+
+            Text text = new Text("This is a test");
+            text.setX(10);
+            text.setY(50);
+
+            text.getTransforms().add(new Rotate(30, 50, 30));
+
+
+            Spinner spinner = new Spinner(1, 10, 1);
+            Spinner spinnerAngle = new Spinner(0, 360, 90);
+            spinnerAngle.getEditor().textProperty().addListener((obs, oldValue, newValue) -> {
+                if (!"".equals(newValue)) {
+                    moveCannon(Integer.parseInt(spinnerAngle.getValue().toString()));
+                }
+            });
             FlowPane panel = new FlowPane();
             Button start = new Button("Start");
             start.setOnAction(new EventHandler<ActionEvent>() {
@@ -220,10 +269,12 @@ public class ClientGame extends Application {
             Button shootBtn = new Button("shoot ");
             shootBtn.setOnAction(new EventHandler<ActionEvent>() {
                 public void handle(ActionEvent event) {
-                    shootFire();
+                    shootFire(Integer.parseInt(spinner.getValue().toString()));
                 }
             });
-
+            panel.getChildren().add(spinner);
+            panel.getChildren().add(spinnerAngle);
+            panel.getChildren().add(text);
             panel.getChildren().add(start);
             panel.getChildren().add(moveRightBtn);
             panel.getChildren().add(shootBtn);
