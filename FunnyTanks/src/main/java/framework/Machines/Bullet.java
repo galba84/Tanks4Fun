@@ -1,6 +1,8 @@
 package framework.Machines;
 
 import Server.User;
+import framework.WorldElements.CellarMap;
+import javafx.scene.paint.Color;
 
 import java.awt.*;
 import java.util.Random;
@@ -15,7 +17,16 @@ public class Bullet extends GameObject implements Moving {
     public Integer velocityX;
     public Integer velocityY;
     public int count;
-    private Point[] trace;
+    private Point[] trace = new Point[]{};
+    private Bullet[] load = new Bullet[]{};
+
+    public Bullet[] getLoad() {
+        return load;
+    }
+
+    public void setLoad(Bullet[] load) {
+        this.load = load;
+    }
 
     public Bullet(Point point, Integer velocityX, Integer velocityY) {
         Random rand = new Random();
@@ -27,28 +38,63 @@ public class Bullet extends GameObject implements Moving {
         count = 10;
     }
 
+    @Override
+    public void getNextPosition(CellarMap map) {
+
+    }
+
+    @Override
+    public boolean isXDirectionPositive() {
+        return false;
+    }
+
+    @Override
+    public boolean isYDirectionPositive() {
+        return false;
+    }
+
+    public boolean isMultyLoad() {
+        return (load.length > 0);
+    }
+
+    public int getCalibre() {
+        return 20;
+    }
+
+    public Color getColour() {
+        return Color.RED;
+    }
+
     public Integer getId() {
         return this.id;
     }
 
-    private void updateSpeed() {
+    private void updateSpeed(int gravity) {
         count--;
-        if (velocityX >= 1) {
-            velocityX -= 1;
+        if (velocityX > 0) {
+            if (velocityX > 2) {
+                velocityX -= 1;
+            }
+        } else {
+            if (velocityX < -2)
+                velocityX += 1;
         }
-//        if (velocityY > 1) {
-        velocityY++;
-//        }
+        velocityY += gravity;
     }
+
+    @Override
+    public Point getCurrentPosition() {
+        return endPoint;
+    }
+
 
     @Override
     public Point[] getTrace() {
         return trace;
     }
 
-    @Override
-    public void calculateMove() {
-        updateSpeed();
+    public void calculateMove(CellarMap map, int gravity) {
+        updateSpeed(gravity);
         setTrace();
         updatePosition();
     }

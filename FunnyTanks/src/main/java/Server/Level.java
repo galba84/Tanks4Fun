@@ -16,9 +16,10 @@ public class Level implements Cloneable, Serializable {
     public Map<Integer, Integer> borderLine;
     public CellarMap map;
     public Gravity gravity;
-    public Map<Integer, Bullet> bullets;
-
-    public volatile ArrayBlockingQueue<Blow> blows = new ArrayBlockingQueue(99);
+    public volatile ArrayBlockingQueue<Bullet> bullets = new ArrayBlockingQueue(999);
+    public volatile ArrayBlockingQueue<Blow> blows = new ArrayBlockingQueue(999);
+    public int xDimension;
+    public int yDimension;
 
     public Tank tank1;
     public Tank tank2;
@@ -35,4 +36,5 @@ public class Level implements Cloneable, Serializable {
         Random rand = new Random(1000);
         this.id = rand.nextInt(1000) + 10;
     }
+
 }

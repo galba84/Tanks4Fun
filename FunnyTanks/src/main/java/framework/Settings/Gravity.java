@@ -1,8 +1,8 @@
 package framework.Settings;
 
 public class Gravity {
-    Integer gravity;
+    public Integer gravity;
     public Gravity(){
-        this.gravity=3;
+        this.gravity=2;
     }
 }
