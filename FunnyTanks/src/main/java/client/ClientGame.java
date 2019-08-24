@@ -24,6 +24,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.Spinner;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
@@ -43,10 +44,11 @@ import sun.awt.geom.Curve;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
-import java.util.LinkedList;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
 import java.util.stream.Stream;
 
 
@@ -58,6 +60,8 @@ public class ClientGame extends Application {
     private FlowPane root;
     private volatile LevelImplementation li;
     WritableImage image;
+    GamePanel gamePanel;
+    Stage primaryStage;
 
     private synchronized void updateCanvas() {
         drawCellarMap();
@@ -80,15 +84,20 @@ public class ClientGame extends Application {
     }
 
     private void startAction() {
-        Runnable r = new Runnable() {
-            public void run() {
-                runBackgClient();
-            }
-        };
         canvas = new Canvas(level.xDimension, level.yDimension);
         gc = canvas.getGraphicsContext2D();
         root.getChildren().add(canvas);
-        Thread t = new Thread(r);
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                runBackgClient();
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                }
+            }
+        };
+        t.setDaemon(true);
         t.start();
     }
 
@@ -98,7 +107,7 @@ public class ClientGame extends Application {
             updateObjects();
             updateCanvas();
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -106,9 +115,10 @@ public class ClientGame extends Application {
     }
 
     public void start(Stage primaryStage) throws Exception {
-        GamePanel gamePanel = new GamePanel();
+        gamePanel = new GamePanel();
         image = new WritableImage(level.xDimension, level.yDimension);
         root = gamePanel.getPanel();
+        this.primaryStage = primaryStage;
         primaryStage.setTitle("Funny Tanks");
         primaryStage.setHeight(level.yDimension);
         primaryStage.setWidth(level.xDimension);
@@ -149,11 +159,6 @@ public class ClientGame extends Application {
 
     public void drawTank() {
         gc.setFill(Color.YELLOW);
-        gc.fillRoundRect(level.tank1.left.x,
-                level.tank1.left.y - 25,
-                50,
-                25, 2, 3);
-        gc.setFill(Color.YELLOW);
         gc.fillRoundRect(level.tank2.left.x,
                 level.tank2.left.y - 25,
                 50,
@@ -171,9 +176,16 @@ public class ClientGame extends Application {
 
         //Creating a Group
         Group root = new Group(line);
+        gc.setFill(Color.YELLOW);
+        gc.setStroke(Color.YELLOW);
+        gc.setLineWidth(30);
+        gc.strokeLine(level.tank1.left.x, level.tank1.left.y, level.tank1.right.x, level.tank1.right.y);
+//        gc.strokeLine(level.tank2.left.x, level.tank2.left.y, level.tank2.right.x, level.tank2.right.y);
+
         gc.setLineWidth(10);
+        gc.setStroke(Color.BLACK);
+
         gc.strokeLine(level.tank1.cannon.mountingPoint.x, level.tank1.cannon.mountingPoint.y, level.tank1.cannon.edgePoint.x, level.tank1.cannon.edgePoint.y);
-        gc.lineTo(200, 300);
     }
 
     private Point2D.Double getPoint(Point point, double angle, double distance) {
@@ -242,8 +254,6 @@ public class ClientGame extends Application {
             text.setY(50);
 
             text.getTransforms().add(new Rotate(30, 50, 30));
-
-
             Spinner spinner = new Spinner(1, 10, 1);
             Spinner spinnerAngle = new Spinner(0, 360, 90);
             spinnerAngle.getEditor().textProperty().addListener((obs, oldValue, newValue) -> {

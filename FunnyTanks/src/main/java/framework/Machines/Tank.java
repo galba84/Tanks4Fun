@@ -5,10 +5,9 @@ import framework.WorldElements.CellarMap;
 
 
 import java.awt.*;
-import java.util.Random;
 
-public class Tank extends Vehicle implements Moving {
-    public Integer acceleration;
+public class Tank extends Vehicle implements Moving, Cloneable {
+    public Integer acceleration = 0;
     public User owner;
     boolean xDirectionPositive;
     boolean yDirectionPositive;
@@ -20,11 +19,17 @@ public class Tank extends Vehicle implements Moving {
         this.cannon = cannon;
         this.buttetMagazine = 10;
         this.tankSettings = tankSettings;
+        setCannonMountingPoint();
+    }
+
+    private void setCannonMountingPoint() {
+        this.cannonMountingPoint = Balistics.getPointFromAngleAndVelocity(this.left, 15, (int) Math.round(Balistics.angleOf(left, right)));
     }
 
     @Override
-    public void getNextPosition(CellarMap map) {
-
+    public Point getNextPosition(CellarMap map) {
+        int angle = (int) Balistics.angleOf(left, right);
+        return Balistics.getPointFromAngleAndVelocity(right, 1, angle);
     }
 
     @Override
@@ -39,6 +44,8 @@ public class Tank extends Vehicle implements Moving {
 
     public Point left;
     public Point right;
+    public Point cannonMountingPoint;
+
     public Cannon cannon;
     public int buttetMagazine;
 
@@ -70,11 +77,11 @@ public class Tank extends Vehicle implements Moving {
 
     public void calculateMove(CellarMap map) {
         updatePosition(map);
-
     }
 
 
     public void updateTankSpeed() {
+        Point x= Balistics.rotateLineClockWise(left,right,180);
         if (acceleration > 0)
             increaseSpeed();
         if (acceleration > 0)
@@ -85,35 +92,60 @@ public class Tank extends Vehicle implements Moving {
     public void updatePosition(CellarMap map) {
         if (speed > 0)
             speed--;
+        else if (speed < 0)
+            speed++;
         this.left.x += speed;
-        Point p = new Point(left.x, left.y);
-        if (map.isPointAir(p)) {
-            this.left.y += 6;
+        this.right.x += speed;
+        if (map.isPointAir(left)) {
+            this.left.y += 5;//todo should be applied gravity
         }
         while (map.isPointGround(left)) {
             left.y--;
         }
-
+        while (map.isPointGround(left)) {
+            left.y--;
+        }
         for (int i = 0; i < 6; i++) {
             if (isBarrierInFront(map)) {
                 this.left.y -= 1;
             }
         }
+
+        if (map.isPointAir(right)) {
+            this.right.y += 5;//todo should be applied gravity
+        }
+        while (map.isPointGround(right)) {
+            right.y--;
+        }
+        while (map.isPointGround(right)) {
+            right.y--;
+        }
+        for (int i = 0; i < 6; i++) {
+            if (isBarrierInFront(map)) {
+                this.right.y -= 1;
+            }
+        }
+
+
         if (isBarrierInFront(map)) {
             stepBack();
         }
+        setCannonMountingPoint();
 
-        double x_new = (this.left.x) + 30 * Math.cos(Math.toRadians(this.cannon.angle));
-        double y_new = (this.left.y) + 30 * Math.sin(Math.toRadians(this.cannon.angle));
+        Point cannonEdgePoint = Balistics.getPointFromAngleAndVelocity(this.cannonMountingPoint, 30, (int) Math.cos(Math.toRadians(this.cannon.angle)));
+        this.cannon.mountingPoint = this.cannonMountingPoint;
 
-        this.cannon.mountingPoint = this.left;
+        this.cannon.edgePoint = cannonEdgePoint;
+
+        double x_new = (this.cannon.mountingPoint.x) + 30 * Math.cos(Math.toRadians(this.cannon.angle));
+        double y_new = (this.cannon.mountingPoint.y) + 30 * Math.sin(Math.toRadians(this.cannon.angle));
         this.cannon.edgePoint = new Point((int) x_new, (int) y_new);
-
+        Point test = getNextPosition(map);
     }
 
     boolean isBarrierInFront(CellarMap map) {
-        if (map.pointHitTheGround(this.left)) {
-            Point tryPoind = new Point(this.left.x, this.left.y + this.tankSettings.wheelRadius);
+        if (map.pointHitTheGround(this.right)) {
+            Point tryPoind = new Point(this.right.x, this.right.y + this.tankSettings.wheelRadiusCentimetre / 100);
             if (map.pointHitTheGround(tryPoind)) {
                 return true;
             }
@@ -124,10 +156,12 @@ public class Tank extends Vehicle implements Moving {
     void stepBack() {
         speed = 0;
         left.x -= 6;
+        right.x -= 6;
+
     }
 
     private void increaseSpeed() {
-        if (this.tankSettings.maxSpeed > this.speed) {
+        if (this.tankSettings.maxSpeedKmPerHour > this.speed) {
             this.speed += 1;
         }
     }
@@ -149,9 +183,8 @@ public class Tank extends Vehicle implements Moving {
     }
 
     public Integer getMaxTankSpeed() {
-        return this.tankSettings.maxSpeed;
+        return this.tankSettings.maxSpeedKmPerHour;
     }
-
 
 
     public Point getLeft() {

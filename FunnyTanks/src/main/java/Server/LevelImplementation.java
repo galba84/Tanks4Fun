@@ -6,10 +6,8 @@ import framework.WorldElements.Cellar;
 import framework.WorldElements.CellarMap;
 import framework.Settings.Gravity;
 import framework.WorldElements.TypeOfSoil;
-
 import java.awt.*;
 import java.util.*;
-
 
 public class LevelImplementation implements LevelInterface {
     public volatile Level level;
@@ -18,7 +16,7 @@ public class LevelImplementation implements LevelInterface {
         for (; ; ) {
             recalculateStep();
             try {
-                Thread.sleep(400);
+                Thread.sleep(250);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -26,13 +24,7 @@ public class LevelImplementation implements LevelInterface {
     }
 
     public void moveCannon(int angle) {
-        double x_new = (level.tank1.left.x) + 30 * Math.cos(Math.toRadians(level.tank1.cannon.angle));
-        double y_new = (level.tank1.left.y) + 30 * Math.sin(Math.toRadians(level.tank1.cannon.angle));
         level.tank1.cannon.angle = angle;
-        level.tank1.cannon.mountingPoint = level.tank1.left;
-        level.tank1.cannon.edgePoint = new Point((int) x_new, (int) y_new);
-
-
     }
 
     public void tankShoot(Tank tank, Integer weapon) {
@@ -91,8 +83,7 @@ public class LevelImplementation implements LevelInterface {
                 int angle = (int) Balistics.angleOf(bullet.startPoint, bullet.endPoint);
                 for (Bullet b : bullets
                 ) {
-
-                    Bullet bb = new Bullet(hitPoint, (int) Balistics.getXSpeed(angle, 30), (int) Balistics.getYSpeed(angle, 30));
+                    Bullet bb = new Bullet(hitPoint, (int) Balistics.getXSpeed(angle, 10), (int) Balistics.getYSpeed(angle, 30));
                     level.bullets.add(bb);
                 }
             }
@@ -119,7 +110,6 @@ public class LevelImplementation implements LevelInterface {
         if (level.tank1.left.x > level.map.cellars.length) {
             level.tank1.left.x = level.tank1.left.x - level.map.cellars.length;
         }
-        double angle = Balistics.angleOf(level.tank1.left, level.tank1.right);
         level.tank1.calculateMove(level.map);
         level.tank2.calculateMove(level.map);
     }
@@ -153,33 +143,31 @@ public class LevelImplementation implements LevelInterface {
     }
 
     public Level createLevel(Integer maxX, Integer maxY, int maxStep) {
-        this.level = new Level();
-        this.level.xDimension=maxX;
-        this.level.yDimension=maxY;
+        level = new Level();
+        level.xDimension = maxX;
+        level.yDimension = maxY;
         level.borderLine = createBorderlineFromCurves(getCurvs(maxX));
-        CellarMap cellarMap = new CellarMap(maxX, maxY);
-        Gravity gravity = new Gravity();
-        for (int x = 0; x < maxX; x++) {
-            int borderPointY = level.borderLine.get(x);
-            for (int y = 0; y < maxY; y++) {
-                if (y > borderPointY) {
-                    cellarMap.cellars[x][y] = new Cellar(TypeOfSoil.Ground.getValue());
-                } else {
-                    cellarMap.cellars[x][y] = new Cellar(TypeOfSoil.Air.getValue());
+        level.map = new CellarMap(maxX, maxY);
+        level.gravity = new Gravity();
+        fillCellarMap();
 
-                }
-            }
-        }
-        level.map = cellarMap;
-        level.gravity = gravity;
-        level.tank1 = new Tank(new Point(150, 100), new Point(190, 330), new Cannon(60,new Point(150, 100)),  TankSettings.getSettings(TankModels.T84));
-
+        level.tank1 = new Tank(new Point(150, 100), new Point(190, 100), new Cannon(340, new Point(150, 100)), TankSettings.getSettings(TankModels.T84));
         level.tank2 = new Tank(new Point(600, 100), new Point(630, 330), new Cannon(120, new Point(600, 100)), TankSettings.getSettings(TankModels.Type99));
-        TankSettings ts1 = TankSettings.getSettings(TankModels.T84);
-        TankSettings ts2 = TankSettings.getSettings(TankModels.Challenger2);
 
         startBacgroundServer();
         return level;
+    }
+
+    private void fillCellarMap() {
+        for (int x = 0; x < level.xDimension; x++) {
+            for (int y = 0; y < level.yDimension; y++) {
+                if (y > level.borderLine.get(x)) {
+                    level.map.cellars[x][y] = new Cellar(TypeOfSoil.Ground.getValue());
+                } else {
+                    level.map.cellars[x][y] = new Cellar(TypeOfSoil.Air.getValue());
+                }
+            }
+        }
     }
 
     private Map<Integer, Integer> createBorderlineFromCurves(Point[] points) {
@@ -247,12 +235,17 @@ public class LevelImplementation implements LevelInterface {
     }
 
     void startBacgroundServer() {
-        Runnable r = new Runnable() {
+        Thread t = new Thread() {
+            @Override
             public void run() {
                 runBackgroundServer();
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                }
             }
         };
-        Thread t = new Thread(r);
+        t.setDaemon(true);
         t.start();
     }
 
@@ -261,7 +254,6 @@ public class LevelImplementation implements LevelInterface {
         System.arraycopy(a, 0, result, 0, a.length);
         System.arraycopy(b, 0, result, a.length, b.length);
         return result;
-
     }
 
     public void moveTank() {
@@ -270,9 +262,6 @@ public class LevelImplementation implements LevelInterface {
     }
 
     void updatemap() {
-
         level.map.update();
     }
-
-
 }

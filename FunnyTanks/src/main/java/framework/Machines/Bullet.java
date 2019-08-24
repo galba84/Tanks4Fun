@@ -31,16 +31,16 @@ public class Bullet extends GameObject implements Moving {
     public Bullet(Point point, Integer velocityX, Integer velocityY) {
         Random rand = new Random();
         id = rand.nextInt();
-        this.startPoint = new Point(point.x + 20, point.y - 30);
-        this.endPoint = new Point(point.x + 20, point.y - 30);
+        this.startPoint = point;
+        this.endPoint = point;
         this.velocityX = velocityX;
         this.velocityY = velocityY;
         count = 10;
     }
 
     @Override
-    public void getNextPosition(CellarMap map) {
-
+    public Point getNextPosition(CellarMap map) {
+return new Point(1,1);
     }
 
     @Override

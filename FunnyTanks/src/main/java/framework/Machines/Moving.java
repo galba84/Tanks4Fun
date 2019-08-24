@@ -7,7 +7,7 @@ import java.awt.*;
 public interface Moving {
     Point[] getTrace();
 
-    void getNextPosition(CellarMap map);
+    Point getNextPosition(CellarMap map);
 
     Point getCurrentPosition();
 
