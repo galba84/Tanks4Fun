@@ -1,8 +1,6 @@
 package framework.Machines;
 
 
-import framework.primitives.Position;
-
 import java.awt.*;
 import java.util.LinkedList;
 

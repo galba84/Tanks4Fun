@@ -20,8 +20,8 @@ public class BulletNuke extends Bullet {
         super(point, velocityX, velocityY);
         Random rand = new Random();
         id = rand.nextInt();
-        this.startPoint = new Point(point.x + 20, point.y - 30);
-        this.endPoint = new Point(point.x + 20, point.y - 30);
+        this.startPoint = point;
+        this.endPoint = point;
         this.velocityX = velocityX;
         this.velocityY = velocityY;
         count = 10;

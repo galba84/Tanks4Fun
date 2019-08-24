@@ -20,7 +20,9 @@ public class Level implements Cloneable, Serializable {
     public volatile ArrayBlockingQueue<Blow> blows = new ArrayBlockingQueue(999);
     public int xDimension;
     public int yDimension;
-
+    public int PointsInOnePercentOfScreenX = 10;
+    public int PointsInOnePercentOfScreenY = 8;
+    public int secondsPerGamePeriod = 10;
     public Tank tank1;
     public Tank tank2;
 

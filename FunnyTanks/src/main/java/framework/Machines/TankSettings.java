@@ -1,9 +1,15 @@
 package framework.Machines;
 
 public class TankSettings {
-    public int maxSpeed;
-    public int wheelRadius;
+    public int maxSpeedKmPerHour;
+    public int wheelRadiusCentimetre;
     public String name = "";
+    public String description = "";
+
+    public int lengthCentimetre;
+    public int heightCentimetre;
+    public int weightKg;
+    public int horsePower;
 
 
     public static TankSettings getSettings(TankModels tm) {
@@ -24,33 +30,45 @@ public class TankSettings {
 
 class Abrams extends TankSettings {
     Abrams() {
-        super();
-        maxSpeed = 67;
-        wheelRadius = 5;
+        maxSpeedKmPerHour = 67;
+        wheelRadiusCentimetre = 500;
+        lengthCentimetre = 792;
+        heightCentimetre = 240;
+        weightKg = 63_000;
+        horsePower = 1_500;
     }
 }
 
 class T84 extends TankSettings {
     T84() {
-        super();
-        maxSpeed = 65;
-        wheelRadius = 6;
+        maxSpeedKmPerHour = 65;
+        wheelRadiusCentimetre = 600;
+        lengthCentimetre = 792;
+        heightCentimetre = 240;
+        weightKg = 63_000;
+        horsePower = 1_500;
     }
 }
 
 class Challenger2 extends TankSettings {
     Challenger2() {
-        super();
-        maxSpeed = 56;
-        wheelRadius = 5;
+        maxSpeedKmPerHour = 56;
+        wheelRadiusCentimetre = 500;
+        lengthCentimetre = 792;
+        heightCentimetre = 240;
+        weightKg = 63_000;
+        horsePower = 1_500;
     }
 }
 
 class Type99 extends TankSettings {
     Type99() {
-        super();
-        maxSpeed = 80;
-        wheelRadius = 5;
+        maxSpeedKmPerHour = 80;
+        wheelRadiusCentimetre = 500;
+        lengthCentimetre = 792;
+        heightCentimetre = 240;
+        weightKg = 63_000;
+        horsePower = 1_500;
     }
 
 }
