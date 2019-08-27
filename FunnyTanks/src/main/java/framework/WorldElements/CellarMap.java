@@ -1,6 +1,4 @@
 package framework.WorldElements;
-
-import framework.Machines.Blow;
 import framework.Settings.Gravity;
 
 import java.awt.*;

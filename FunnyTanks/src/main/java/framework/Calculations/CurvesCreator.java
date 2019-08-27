@@ -5,11 +5,11 @@ import java.awt.*;
 
 public class CurvesCreator {
 
-    float getDistance(float x1, float x2) {
-        if (x1 > x2) {
-            return x1 - x2;
+    float getDistance(float p1, float p2) {
+        if (p1 > p2) {
+            return p1 - p2;
         }
-        return x2 - x1;
+        return p2 - p1;
     }
 
     private Point getMidPoint(Point p1, Point p2) {
@@ -43,9 +43,8 @@ public class CurvesCreator {
         return result;
     }
 
+    //x,y should be positive number. X0 - top, left cornet, Yo top, left corner
     public Point[] drawCurve(Point p1, Point p2) {
-        Point p3 = getMidPoint(p1, p2);
-
         float distanceX = getDistance(p2.x, p1.x);
         float distanceY = getDistance(p2.y, p1.y);
 
@@ -55,41 +54,34 @@ public class CurvesCreator {
 
         numberOfSegments = (int) distanceX;
         lineDimension = (int) distanceY;
-        result = new Point[Math.abs(numberOfSegments)];
 
+        if (numberOfSegments < 2 || lineDimension < 2) {
+            return new Point[]{p1, p2};
+        }
 
-        float[] segments = splitLineIntoEqualSegments(Math.round(lineDimension / 2), Math.round(numberOfSegments / 2));
-        float[] transformedSegmentsFirst = transformSegments(segments, Math.round(lineDimension / 2));
+        float[] segments = splitLineIntoEqualSegments(lineDimension / 2, numberOfSegments / 2);
+        float[] transformedSegmentsFirst = transformSegments(segments, lineDimension / 2);
         float[] transformedSegmentsSecond = mirrorArray(transformedSegmentsFirst);
+        float[] united;
 
+        if (numberOfSegments % 2 != 0) {
+            float[] temp = new float[]{transformedSegmentsFirst[transformedSegmentsFirst.length - 1]};
+            transformedSegmentsFirst = concatArrays(transformedSegmentsFirst, temp);
+        }
+        united = concatArrays(transformedSegmentsFirst, transformedSegmentsSecond);
+        result = new Point[united.length];
 
         float add = 0;
-        for (int i = 0; i < numberOfSegments / 2; i++) {
-            add += (transformedSegmentsFirst[i]);
-            for (int ii = 0; ii < transformedSegmentsFirst[i]; ii++) {
-                if (p2.y > p1.y) {
-                    result[i] = new Point(p1.x + i, p1.y + (int) Math.round(add));
-                } else {
-                    result[i] = new Point(p1.x + i, p1.y - (int) Math.round(add));
-                }
+        for (int i = 0; i < united.length; i++) {
+            add += (united[i]);
+            if (p2.y > p1.y) {
+                result[i] = new Point(p1.x + i, p1.y + (int) Math.round(add));
+            } else {
+                result[i] = new Point(p1.x + i, p1.y - (int) Math.round(add));
             }
-        }
-        add = 0;
-        for (int i2 = 0; i2 < numberOfSegments / 2; i2++) {
-            add += (transformedSegmentsSecond[i2]);
-            for (int ii = 0; ii < transformedSegmentsSecond[i2]; ii++) {
-                if (p2.y > p1.y) {
-                    result[i2 + numberOfSegments / 2] = new Point(p3.x + i2, p3.y + (int) Math.round(add));
-                } else {
-                    result[i2 + numberOfSegments / 2] = new Point(p3.x + i2, p3.y - (int) Math.round(add));
-                }
-            }
-        }
-        // TODO: 12/08/2019
-        if (numberOfSegments % 2 > 0) {
-            result[(numberOfSegments / 2) + 1] = new Point(1, 1);
         }
         return result;
+
     }
 
     float[] splitLineIntoEqualSegments(float line, float numberOfSegments) {
@@ -102,12 +94,19 @@ public class CurvesCreator {
 
 
     float[] transformSegments(float[] segments, int lineDimension) {
-        Float step = (float) lineDimension / segments.length / segments.length;
+        float step = (float) lineDimension / segments.length / segments.length;
         segments[0] = 0;
         for (int i = 1; i < segments.length; i++) {
             segments[i - 1] += step;
             segments[i] = segments[i - 1] + step;
         }
         return segments;
+    }
+
+    public static float[] concatArrays(float[] a, float[] b) {
+        float[] result = new float[a.length + b.length];
+        System.arraycopy(a, 0, result, 0, a.length);
+        System.arraycopy(b, 0, result, a.length, b.length);
+        return result;
     }
 }

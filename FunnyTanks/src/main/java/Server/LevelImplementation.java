@@ -46,7 +46,7 @@ public class LevelImplementation implements LevelInterface {
     boolean isOutOfRealm(Point position) {
         int x = this.level.map.cellars.length;
         int y = this.level.map.cellars[0].length;
-        if (position.x >= x || position.y >= y || x < 0 || y < 0) {
+        if (position.x >= x || position.y >= y || position.x < 0 || position.y < 0) {
             return true;
         }
         return false;
@@ -55,7 +55,6 @@ public class LevelImplementation implements LevelInterface {
     private void calculateIntersections() {
         for (Bullet bullet : level.bullets
         ) {
-
             for (Point point : bullet.getTrace()
             ) {
                 if (isOutOfRealm(point)) {
@@ -102,7 +101,7 @@ public class LevelImplementation implements LevelInterface {
         updateTankBullet();
         updateBlow();
         calculateIntersections();
-        updatemap();
+        updateMap();
     }
 
 
@@ -261,7 +260,7 @@ public class LevelImplementation implements LevelInterface {
         level.tank1.updateTankSpeed();
     }
 
-    void updatemap() {
+    void updateMap() {
         level.map.update();
     }
 }
