@@ -81,7 +81,6 @@ public class Tank extends Vehicle implements Moving, Cloneable {
 
 
     public void updateTankSpeed() {
-        Point x= Balistics.rotateLineClockWise(left,right,180);
         if (acceleration > 0)
             increaseSpeed();
         if (acceleration > 0)

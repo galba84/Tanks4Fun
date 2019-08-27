@@ -1,6 +1,7 @@
 package framework.Machines;
 
 import Server.User;
+import framework.Calculations.CurvesCreator;
 import framework.WorldElements.CellarMap;
 import javafx.scene.paint.Color;
 
@@ -36,11 +37,12 @@ public class Bullet extends GameObject implements Moving {
         this.velocityX = velocityX;
         this.velocityY = velocityY;
         count = 10;
+        setTrace();
     }
 
     @Override
     public Point getNextPosition(CellarMap map) {
-return new Point(1,1);
+        return new Point(1, 1);
     }
 
     @Override
@@ -95,12 +97,17 @@ return new Point(1,1);
 
     public void calculateMove(CellarMap map, int gravity) {
         updateSpeed(gravity);
-        setTrace();
         updatePosition();
+        setTrace();
     }
 
     private void setTrace() {
-        trace = new Point[]{new Point(this.endPoint.x, this.endPoint.y), new Point(this.endPoint.x + velocityX, this.endPoint.y + velocityY)};
+        CurvesCreator cc = new CurvesCreator();
+        if (velocityX == 0 & velocityY == 0) {
+            trace = new Point[]{this.endPoint};
+        } else {
+            trace = cc.drawCurve(this.endPoint, new Point(this.endPoint.x + velocityX, this.endPoint.y + velocityY));
+        }
     }
 
     public void updatePosition() {

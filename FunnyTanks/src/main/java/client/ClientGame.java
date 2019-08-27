@@ -25,6 +25,9 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
@@ -41,7 +44,9 @@ import javafx.scene.paint.Color;
 import framework.WorldElements.TypeOfSoil;
 import sun.awt.geom.Curve;
 
+import javafx.scene.image.*;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.io.ObjectOutputStream;
@@ -62,6 +67,15 @@ public class ClientGame extends Application {
     WritableImage image;
     GamePanel gamePanel;
     Stage primaryStage;
+    public static final int H = 800;
+    public static final int W = 800;
+
+    private static final String TANK_IMAGE_LOC =
+            "tank_icon2_90.png";
+    private static final String BULLET_IMAGE_LOC =
+            "bullets_1_65.png";
+    private Image tankImage;
+    private Node tank;
 
     private synchronized void updateCanvas() {
         drawCellarMap();
@@ -72,7 +86,7 @@ public class ClientGame extends Application {
 
     public ClientGame() {
         li = new LevelImplementation();
-        this.level = li.createLevel(800, 800, 10);
+        this.level = li.createLevel(W, H, 10);
     }
 
     synchronized void updateObjects() {
@@ -152,40 +166,30 @@ public class ClientGame extends Application {
     }
 
 
-    public void moveTankRight() {
+    public void moveTankForward() {
         li.moveTank();
     }
 
+    public void moveTankBackward() {
+        li.moveTank();
+    }
 
     public void drawTank() {
+        gc.strokeLine(level.tank1.cannon.mountingPoint.x, level.tank1.cannon.mountingPoint.y, level.tank1.cannon.edgePoint.x, level.tank1.cannon.edgePoint.y);
+
         gc.setFill(Color.YELLOW);
-        gc.fillRoundRect(level.tank2.left.x,
-                level.tank2.left.y - 25,
-                50,
-                25, 5, 6);
+        gc.fillRoundRect(level.tank2.left.x, level.tank2.left.y - 25, 50, 25, 5, 6);
 
-
-        Line line = new Line();
-
-        //Setting the properties to a line
-        line.setStartX(100.0);
-        line.setStartY(150.0);
-        line.setEndX(500.0);
-        line.setEndY(150.0);
-
-
-        //Creating a Group
-        Group root = new Group(line);
-        gc.setFill(Color.YELLOW);
         gc.setStroke(Color.YELLOW);
         gc.setLineWidth(30);
-        gc.strokeLine(level.tank1.left.x, level.tank1.left.y, level.tank1.right.x, level.tank1.right.y);
-//        gc.strokeLine(level.tank2.left.x, level.tank2.left.y, level.tank2.right.x, level.tank2.right.y);
 
+        tankImage = new Image(TANK_IMAGE_LOC);
+        tank = new ImageView(tankImage);
+        Group dungeon = new Group(tank);
+        gc.getCanvas().getGraphicsContext2D().drawImage(tankImage, level.tank1.cannonMountingPoint.x - 30, level.tank1.cannonMountingPoint.y - 25);
         gc.setLineWidth(10);
         gc.setStroke(Color.BLACK);
 
-        gc.strokeLine(level.tank1.cannon.mountingPoint.x, level.tank1.cannon.mountingPoint.y, level.tank1.cannon.edgePoint.x, level.tank1.cannon.edgePoint.y);
     }
 
     private Point2D.Double getPoint(Point point, double angle, double distance) {
@@ -215,8 +219,10 @@ public class ClientGame extends Application {
     private void drawBullet() {
         for (Bullet bullet : level.bullets
         ) {
-            gc.setFill(bullet.getColour());
-            gc.fillOval(bullet.endPoint.x, bullet.endPoint.y, bullet.getCalibre(), 8);
+            tankImage = new Image(BULLET_IMAGE_LOC);
+            tank = new ImageView(tankImage);
+            Group dungeon = new Group(tank);
+            gc.getCanvas().getGraphicsContext2D().drawImage(tankImage, bullet.endPoint.x, bullet.endPoint.y);
         }
     }
 
@@ -232,10 +238,10 @@ public class ClientGame extends Application {
 
 
     private Point[] setEdges() {
-        Point[] points = new Point[800 / 50];
+        Point[] points = new Point[W / 50];
         Random rand = new Random();
-        for (int i = 50; i < 800; i += 50) {
-            Point point = new Point(i, rand.nextInt(300) + 200);
+        for (int i = 50; i < W; i += 50) {
+            Point point = new Point(i, rand.nextInt(H / 2) + 200);
             points[i] = point;
         }
         return points;
@@ -255,7 +261,9 @@ public class ClientGame extends Application {
 
             text.getTransforms().add(new Rotate(30, 50, 30));
             Spinner spinner = new Spinner(1, 10, 1);
-            Spinner spinnerAngle = new Spinner(0, 360, 90);
+
+
+            Spinner spinnerAngle = new Spinner(0, 360, level.tank1.cannon.angle);
             spinnerAngle.getEditor().textProperty().addListener((obs, oldValue, newValue) -> {
                 if (!"".equals(newValue)) {
                     moveCannon(Integer.parseInt(spinnerAngle.getValue().toString()));
@@ -269,10 +277,17 @@ public class ClientGame extends Application {
                 }
             });
 
-            Button moveRightBtn = new Button("move right ");
-            moveRightBtn.setOnAction(new EventHandler<ActionEvent>() {
+            Button moveFrwrdBtn = new Button("move forward");
+            moveFrwrdBtn.setOnAction(new EventHandler<ActionEvent>() {
                 public void handle(ActionEvent event) {
-                    moveTankRight();
+                    moveTankForward();
+                }
+            });
+
+            Button moveBcwrdBtn = new Button("move backward");
+            moveBcwrdBtn.setOnAction(new EventHandler<ActionEvent>() {
+                public void handle(ActionEvent event) {
+                    moveTankBackward();
                 }
             });
 
@@ -282,11 +297,13 @@ public class ClientGame extends Application {
                     shootFire(Integer.parseInt(spinner.getValue().toString()));
                 }
             });
+
             panel.getChildren().add(spinner);
             panel.getChildren().add(spinnerAngle);
             panel.getChildren().add(text);
             panel.getChildren().add(start);
-            panel.getChildren().add(moveRightBtn);
+            panel.getChildren().add(moveBcwrdBtn);
+            panel.getChildren().add(moveFrwrdBtn);
             panel.getChildren().add(shootBtn);
             return panel;
         }
